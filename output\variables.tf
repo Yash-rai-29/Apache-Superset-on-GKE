@@ -1,17 +1,11 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project"
+  description = "The GCP project ID."
   default     = "aviato-game-fight-rvxirf"
 }
 
-variable "region" {
-  type        = string
-  description = "The region to deploy resources in"
-  default     = "us-central1"
-}
-
-variable "default_subnets" {
-  type = list(string)
+variable "regions" {
+  type    = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -56,6 +50,7 @@ variable "default_subnets" {
     "europe-central2",
     "me-west1"
   ]
+  description = "List of regions where subnets exist."
 }
 
 variable "bucket_names" {
@@ -65,14 +60,5 @@ variable "bucket_names" {
     "aviato-game-fight-rvxirf_bucket",
     "staging.aviato-game-fight-rvxirf.appspot.com"
   ]
-}
-
-variable "service_accounts" {
-  type = list(string)
-  default = [
-    "twitch-login@aviato-game-fight-rvxirf.iam.gserviceaccount.com",
-    "aviato-game-fight-rvxirf@appspot.gserviceaccount.com",
-    "30647320905-compute@developer.gserviceaccount.com",
-    "firebase-adminsdk-d21rv@aviato-game-fight-rvxirf.iam.gserviceaccount.com"
-  ]
+  description = "List of cloud storage bucket names"
 }
