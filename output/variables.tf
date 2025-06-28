@@ -45,28 +45,36 @@ variable "regions" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3",
-    "us-east1",
-    "europe-central2",
-    "me-west1"
+    "europe-west3"
   ]
-  description = "List of regions to configure VPC flow logs."
+  description = "List of regions for subnets"
 }
 
 variable "default_network_name" {
   type        = string
-  description = "The name of the default network."
+  description = "The name of the default network"
   default     = "default"
 }
 
 variable "default_allow_ssh_firewall_rule_name" {
   type        = string
-  description = "The name of the default allow SSH firewall rule."
+  description = "The name of the default allow SSH firewall rule"
   default     = "default-allow-ssh"
 }
 
 variable "default_allow_rdp_firewall_rule_name" {
   type        = string
-  description = "The name of the default allow RDP firewall rule."
+  description = "The name of the default allow RDP firewall rule"
   default     = "default-allow-rdp"
 }
+
+variable "bucket_names" {
+  type = list(string)
+  default = [
+    "aviato-game-fight-rvxirf.appspot.com",
+    "aviato-game-fight-rvxirf_bucket",
+    "staging.aviato-game-fight-rvxirf.appspot.com"
+  ]
+  description = "List of cloud storage bucket names."
+}
+
