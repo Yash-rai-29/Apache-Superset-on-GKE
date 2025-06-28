@@ -1,12 +1,11 @@
 variable "project_id" {
   type        = string
-  description = "The GCP project ID"
+  description = "The ID of the project in which to provision resources."
   default     = "aviato-game-fight-rvxirf"
 }
 
 variable "regions" {
-  type        = list(string)
-  description = "List of regions"
+  type    = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -51,18 +50,15 @@ variable "regions" {
     "europe-central2",
     "me-west1"
   ]
+  description = "List of regions to enable flow logs"
 }
 
-variable "api_key_rotation_days" {
-  type        = number
-  description = "Number of days before API key rotation is required"
-  default     = 90
-}
-
-variable "default_labels" {
-  type = map(string)
-  default = {
-    environment = "production"
-  }
-  description = "Default labels to apply to all resources"
+variable "bucket_names" {
+  type = list(string)
+  default = [
+    "aviato-game-fight-rvxirf.appspot.com",
+    "aviato-game-fight-rvxirf-US-aviato-game-fight-rvxirf_bucket",
+    "staging.aviato-game-fight-rvxirf.appspot.com"
+  ]
+  description = "List of bucket names"
 }
