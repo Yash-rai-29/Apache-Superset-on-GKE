@@ -1,17 +1,11 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project in which to configure resources."
+  description = "The ID of the project"
   default     = "aviato-game-fight-rvxirf"
 }
 
-variable "region" {
-  type        = string
-  description = "The region in which to create resources."
-  default     = "us-central1"
-}
-
-variable "default_subnets" {
-  type = list(string)
+variable "regions" {
+  type    = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -51,15 +45,13 @@ variable "default_subnets" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3",
-    "us-east1",
-    "europe-central2",
-    "me-west1",
+    "europe-west3"
   ]
+  description = "List of regions to enable flow logs."
 }
 
-variable "api_key_rotation_days" {
-  type        = number
-  description = "Number of days after which API keys should be rotated"
-  default     = 90
+variable "key_rotation_period" {
+  type        = string
+  description = "The key rotation period"
+  default     = "7776000s"
 }
