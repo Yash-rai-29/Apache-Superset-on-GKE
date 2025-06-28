@@ -5,7 +5,7 @@ variable "project_id" {
 }
 
 variable "regions" {
-  type    = list(string)
+  type = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -45,27 +45,12 @@ variable "regions" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3"
+    "europe-west3",
+    "us-east1",
+    "europe-central2",
+    "me-west1"
   ]
-  description = "List of regions for subnets"
-}
-
-variable "default_network_name" {
-  type        = string
-  description = "The name of the default network"
-  default     = "default"
-}
-
-variable "default_allow_ssh_firewall_rule_name" {
-  type        = string
-  description = "The name of the default allow SSH firewall rule"
-  default     = "default-allow-ssh"
-}
-
-variable "default_allow_rdp_firewall_rule_name" {
-  type        = string
-  description = "The name of the default allow RDP firewall rule"
-  default     = "default-allow-rdp"
+  description = "List of regions to enable flow logs"
 }
 
 variable "bucket_names" {
@@ -75,6 +60,5 @@ variable "bucket_names" {
     "aviato-game-fight-rvxirf_bucket",
     "staging.aviato-game-fight-rvxirf.appspot.com"
   ]
-  description = "List of cloud storage bucket names."
+  description = "List of bucket names to enforce uniform bucket level access"
 }
-
