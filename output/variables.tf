@@ -1,11 +1,12 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project"
+  description = "The GCP project ID"
   default     = "aviato-game-fight-rvxirf"
 }
 
 variable "regions" {
-  type    = list(string)
+  type        = list(string)
+  description = "List of regions"
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -45,32 +46,23 @@ variable "regions" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3"
+    "europe-west3",
+    "us-east1",
+    "europe-central2",
+    "me-west1"
   ]
 }
 
-variable "default_network_name" {
-  type        = string
-  description = "The name of the default network"
-  default     = "default"
+variable "api_key_rotation_days" {
+  type        = number
+  description = "Number of days before API key rotation is required"
+  default     = 90
 }
 
-variable "rdp_ssh_source_ranges" {
-  type = list(string)
-  default = [
-    "10.0.0.0/8",
-    "172.16.0.0/12",
-    "192.168.0.0/16"
-  ]
-  description = "Permitted source ranges for RDP and SSH"
-}
-
-variable "bucket_names" {
-  type = list(string)
-  default = [
-    "aviato-game-fight-rvxirf.appspot.com",
-    "aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com"
-  ]
-  description = "List of bucket names to enforce uniform bucket-level access"
+variable "default_labels" {
+  type = map(string)
+  default = {
+    environment = "production"
+  }
+  description = "Default labels to apply to all resources"
 }
