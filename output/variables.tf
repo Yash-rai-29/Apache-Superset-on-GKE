@@ -1,11 +1,43 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project in which to provision resources."
+  description = "The GCP project ID"
   default     = "aviato-game-fight-rvxirf"
 }
 
-variable "regions" {
-  type    = list(string)
+variable "default_region" {
+  type        = string
+  description = "The default GCP region"
+  default     = "us-central1"
+}
+
+variable "default_zones" {
+  type = list(string)
+  default = [
+    "us-central1-a",
+    "us-central1-b",
+    "us-central1-c"
+  ]
+  description = "The default GCP zones"
+}
+
+variable "api_keys_rotation_days" {
+  type        = number
+  description = "Number of days after which API keys should be rotated"
+  default     = 90
+}
+
+variable "bucket_names" {
+  type = list(string)
+  default = [
+    "aviato-game-fight-rvxirf.appspot.com",
+    "aviato-game-fight-rvxirf_bucket",
+    "staging.aviato-game-fight-rvxirf.appspot.com"
+  ]
+  description = "List of cloud storage bucket names"
+}
+
+variable "subnet_regions" {
+  type = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -45,20 +77,7 @@ variable "regions" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3",
-    "us-east1",
-    "europe-central2",
-    "me-west1"
+    "europe-west3"
   ]
-  description = "List of regions to enable flow logs"
-}
-
-variable "bucket_names" {
-  type = list(string)
-  default = [
-    "aviato-game-fight-rvxirf.appspot.com",
-    "aviato-game-fight-rvxirf-US-aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com"
-  ]
-  description = "List of bucket names"
+  description = "List of regions where subnets reside"
 }
