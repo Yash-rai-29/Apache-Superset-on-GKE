@@ -1,11 +1,10 @@
 variable "project_id" {
-  type        = string
-  description = "The ID of the project"
-  default     = "aviato-game-fight-rvxirf"
+  type = string
+  default = "aviato-game-fight-rvxirf"
 }
 
 variable "regions" {
-  type    = list(string)
+  type = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -45,27 +44,11 @@ variable "regions" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3"
+    "europe-west3",
+    "us-east1",
+    "europe-central2",
+    "me-west1",
   ]
-  description = "List of regions."
-}
-
-variable "default_network_name" {
-  type        = string
-  default     = "default"
-  description = "The name of the default network."
-}
-
-variable "default_allow_ssh_firewall_rule_name" {
-  type        = string
-  default     = "default-allow-ssh"
-  description = "The name of the default allow ssh firewall rule"
-}
-
-variable "default_allow_rdp_firewall_rule_name" {
-  type        = string
-  default     = "default-allow-rdp"
-  description = "The name of the default allow rdp firewall rule"
 }
 
 variable "bucket_names" {
@@ -75,16 +58,4 @@ variable "bucket_names" {
     "aviato-game-fight-rvxirf_bucket",
     "staging.aviato-game-fight-rvxirf.appspot.com"
   ]
-  description = "List of Cloud Storage bucket names."
-}
-
-variable "service_accounts" {
-  type = list(string)
-  default = [
-    "twitch-login@aviato-game-fight-rvxirf.iam.gserviceaccount.com",
-    "aviato-game-fight-rvxirf@appspot.gserviceaccount.com",
-    "30647320905-compute@developer.gserviceaccount.com",
-    "firebase-adminsdk-d21rv@aviato-game-fight-rvxirf.iam.gserviceaccount.com"
-  ]
-  description = "List of service account emails."
 }
