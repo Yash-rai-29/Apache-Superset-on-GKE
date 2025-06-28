@@ -1,10 +1,16 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project"
+  description = "The GCP project ID"
   default     = "aviato-game-fight-rvxirf"
 }
 
-variable "regions" {
+variable "region" {
+  type        = string
+  description = "The GCP region"
+  default     = "us-central1"
+}
+
+variable "default_regions" {
   type    = list(string)
   default = [
     "africa-south1",
@@ -45,20 +51,8 @@ variable "regions" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3",
-    "us-east1",
-    "europe-central2",
-    "me-west1"
+    "europe-west3"
   ]
-  description = "List of regions where subnets exist."
+  description = "List of default regions"
 }
 
-variable "bucket_names" {
-  type = list(string)
-  default = [
-    "aviato-game-fight-rvxirf.appspot.com",
-    "aviato-game-fight-rvxirf-US-aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com"
-  ]
-  description = "List of bucket names to apply uniform bucket level access"
-}
