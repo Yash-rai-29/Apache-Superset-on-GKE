@@ -2,122 +2,93 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "5.22.0"
+      version = "4.68.0"
     }
   }
 }
 
 provider "google" {
   project = var.project_id
-  region  = "us-central1"
 }
 
-resource "google_project_service_identity" "gcr_service_account" {
-  provider = google
-  project  = var.project_id
-  service  = "containerregistry.googleapis.com"
-}
-
-resource "google_project_service_identity" "artifactregistry_service_account" {
-  provider = google
-  project  = var.project_id
-  service  = "artifactregistry.googleapis.com"
-}
-
-resource "google_container_registry" "registry" {
-  project  = var.project_id
-  location = "US"
-  depends_on = [google_project_service_identity.gcr_service_account]
-}
-
-resource "google_artifact_registry_repository" "default" {
-  provider = google
-  project = var.project_id
-  location = "us-central1"
-  repository_id = "default-repo"
-  format = "DOCKER"
-  depends_on = [google_project_service_identity.artifactregistry_service_account]
-}
-
-resource "google_project_service" "artifact_registry" {
-  provider = google
-  project = var.project_id
+resource "google_project_service" "artifactregistry" {
   service            = "artifactregistry.googleapis.com"
   disable_on_destroy = false
 }
 
-resource "google_project_service" "cloudasset" {
+resource "google_artifact_registry_repository" "default" {
+  provider      = google
+  location      = "us"
+  repository_id = "container-repo"
+  description   = "Terraform-managed container repository."
+  format        = "DOCKER"
+  project       = var.project_id
+
+  depends_on = [google_project_service.artifactregistry]
+}
+
+resource "google_container_analysis_occurrence" "default" {
   provider = google
-  project  = var.project_id
-  service            = "cloudasset.googleapis.com"
+  note     = "projects/goog-analysis/notes/PACKAGE_VULNERABILITY"
+  resource_uri = "https://${google_artifact_registry_repository.default.location}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.default.repository_id}/test-image:latest"
+}
+
+resource "google_project_service" "containeranalysis" {
+  service            = "containeranalysis.googleapis.com"
+  disable_on_destroy = false
+
+  depends_on = [google_artifact_registry_repository.default]
+}
+
+resource "google_project_service" "cloudasset" {
+  service = "cloudasset.googleapis.com"
   disable_on_destroy = false
 }
 
-resource "google_project_iam_member" "cloudasset_sa" {
-  project = var.project_id
-  role    = "roles/cloudasset.serviceAgent"
-  member  = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-cloudasset.iam.gserviceaccount.com"
-}
-
-data "google_project" "project" {
-  project_id = var.project_id
-}
-
-resource "google_compute_network" "default" {
+resource "google_project_service_identity" "cloudasset" {
   provider = google
-  name                    = var.default_network_name
-  project                 = var.project_id
+  project = var.project_id
+  service = "cloudasset.googleapis.com"
+}
+
+resource "google_project_iam_member" "cloudasset_export_permission" {
+  project = var.project_id
+  role = "roles/storage.admin"
+  member = "serviceAccount:${data.google_project_service_identity.cloudasset.email}"
+}
+
+data "google_project_service_identity" "cloudasset" {
+  provider = google
+  project = var.project_id
+  service = "cloudasset.googleapis.com"
+}
+
+resource "google_os_login_settings" "default" {
+  project = var.project_id
+  deletion_mode = "ACCOUNT"
+}
+
+resource "google_project_default_network" "default" {
+  project = var.project_id
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "google_compute_network" "vpc_network" {
+  name                    = "custom-vpc"
   auto_create_subnetworks = false
-  delete_default_routes = true
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  project                 = var.project_id
 }
 
-resource "google_compute_firewall" "default_allow_ssh" {
-  provider = google
-  name    = var.default_allow_ssh_firewall_rule_name
-  project = var.project_id
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-
-  lifecycle {
-    ignore_changes = [source_ranges]
-  }
-}
-
-resource "google_compute_firewall" "default_allow_rdp" {
-  provider = google
-  name    = var.default_allow_rdp_firewall_rule_name
-  project = var.project_id
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["3389"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  lifecycle {
-    ignore_changes = [source_ranges]
-  }
-}
-
-
-resource "google_compute_subnetwork" "default_subnetworks" {
+resource "google_compute_subnetwork" "default" {
   for_each = toset(var.regions)
 
-  name                     = "default"
-  ip_cidr_range          = cidrsubnet("10.0.0.0/8", 8, index(toset(var.regions), each.value))
-  network                  = "default"
-  region                   = each.value
+  name                     = "subnet-${each.key}"
+  ip_cidr_range            = "10.10.10.0/24"
+  region                   = each.key
+  network                  = google_compute_network.vpc_network.id
   project                  = var.project_id
   private_ip_google_access = true
   log_config {
@@ -127,442 +98,324 @@ resource "google_compute_subnetwork" "default_subnetworks" {
   }
 }
 
-resource "google_project_default_service_accounts" "default_accounts" {
-  provider = google
+resource "google_compute_firewall" "ssh" {
+  name    = "deny-ssh-internet"
+  network = "default"
   project = var.project_id
-  action = "DISABLE"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 }
 
-resource "google_project_organization_policy" "iam_allowed_policy_member_domains" {
-  name = "iam.allowedPolicyMemberDomains"
+resource "google_compute_firewall" "rdp" {
+  name    = "deny-rdp-internet"
+  network = "default"
   project = var.project_id
-  constraint = "iam.allowedPolicyMemberDomains"
 
-  list_policy {
-    allow {
-      all = true
-    }
+  allow {
+    protocol = "tcp"
+    ports    = ["3389"]
+  }
+
+  source_ranges = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+}
+
+resource "google_dns_managed_zone" "default" {
+  name        = "dns-logging-zone"
+  dns_name    = "example.com."
+  project     = var.project_id
+  description = "DNS zone for enabling DNS logging"
+  visibility  = "public"
+}
+
+resource "google_compute_network" "default" {
+  name                    = "default"
+  project                 = var.project_id
+  delete_default_routes = true
+  dns_config {
+    enable_logging = true
   }
 }
 
 resource "google_logging_project_sink" "default" {
-  name        = "all-logs"
-  project     = var.project_id
-  destination = "storage.googleapis.com/${var.project_id}-all-logs"
-  filter      = "NOT logName:projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Fdata_access"
+  name           = "all-logs-sink"
+  description  = "A sink to capture all logs"
+  destination  = "storage.googleapis.com/${var.project_id}-logs-bucket"
+  filter         = "NOT logName:projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Fdata_access"
+  project = var.project_id
 }
 
-resource "google_storage_bucket" "logging_bucket" {
-  name          = "${var.project_id}-all-logs"
-  project       = var.project_id
-  location      = "US"
-  force_destroy = true
-}
-
-resource "google_monitoring_alert_policy" "audit_configuration_changes" {
-  display_name = "Audit Configuration Changes"
-  project      = var.project_id
-  combiner     = "OR"
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/audit_configuration_changes\" AND resource.type=\"gcp_project\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
-    }
-  }
-
-  notification_channels = []
+resource "google_storage_bucket" "log_bucket" {
+  name                        = "${var.project_id}-logs-bucket"
+  project                     = var.project_id
+  location                    = "US"
+  uniform_bucket_level_access = true
 }
 
 resource "google_logging_metric" "audit_configuration_changes" {
-  name   = "audit_configuration_changes"
+  name        = "audit-config-changes"
   project = var.project_id
-  description = "Count of audit configuration changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
-    }
-  }
-  filter = "resource.type=gcp_project AND protoPayload.methodName:SetIamPolicy OR protoPayload.methodName:CreateServiceAccount OR protoPayload.methodName:DeleteServiceAccount OR protoPayload.methodName:UndeleteServiceAccount OR protoPayload.methodName:UpdateServiceAccount OR protoPayload.methodName:PatchServiceAccount OR protoPayload.methodName:DisableServiceAccount OR protoPayload.methodName:EnableServiceAccount OR protoPayload.methodName:GrantServiceAccountRoles OR protoPayload.methodName:RevokeServiceAccountRoles"
+  description = "Metric for audit configuration changes"
+  filter      = "protoPayload.methodName=\"google.iam.admin.v1.CreateServiceAccount\" OR protoPayload.methodName=\"google.iam.admin.v1.DeleteServiceAccount\" OR protoPayload.methodName=\"google.iam.admin.v1.SetIamPolicy\""
   metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/audit_configuration_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "bucket_permission_changes" {
-  display_name = "Cloud Storage IAM Permission Changes"
-  project      = var.project_id
-  combiner     = "OR"
+resource "google_monitoring_alert_policy" "audit_configuration_changes_alert" {
+  display_name = "Audit Configuration Changes Alert"
+  project = var.project_id
+  combiner = "OR"
   conditions {
-    display_name = "Log Metric Condition"
+    display_name = "Audit Configuration Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/bucket_permission_changes\" AND resource.type=\"gcs_bucket\""
+      filter          = "metric.type=\"logging.googleapis.com/user/audit-config-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
     }
   }
-
-  notification_channels = []
+  alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
+  }
 }
 
 resource "google_logging_metric" "bucket_permission_changes" {
-  name   = "bucket_permission_changes"
+  name        = "bucket-permission-changes"
   project = var.project_id
-  description = "Count of Cloud Storage IAM permission changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
-    }
-  }
-  filter = "resource.type=gcs_bucket AND protoPayload.methodName=storage.setIamPermissions"
+  description = "Metric for Cloud Storage IAM permission changes"
+  filter      = "resource.type=\"gcs_bucket\" AND protoPayload.methodName=\"storage.setIamPermissions\""
   metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/bucket_permission_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "custom_role_changes" {
-  display_name = "Custom Role Changes"
-  project      = var.project_id
-  combiner     = "OR"
+resource "google_monitoring_alert_policy" "bucket_permission_changes_alert" {
+  display_name = "Cloud Storage IAM Permission Changes Alert"
+  project = var.project_id
+  combiner = "OR"
   conditions {
-    display_name = "Log Metric Condition"
+    display_name = "Cloud Storage IAM Permission Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/custom_role_changes\" AND resource.type=\"gcp_project\""
+      filter          = "metric.type=\"logging.googleapis.com/user/bucket-permission-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
     }
   }
-
-  notification_channels = []
+  alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
+  }
 }
 
 resource "google_logging_metric" "custom_role_changes" {
-  name   = "custom_role_changes"
+  name        = "custom-role-changes"
   project = var.project_id
-  description = "Count of custom role changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
-    }
-  }
-  filter = "resource.type=gcp_project AND protoPayload.methodName=iam.roles.create OR protoPayload.methodName=iam.roles.delete OR protoPayload.methodName=iam.roles.update"
+  description = "Metric for Custom Role Changes"
+  filter      = "protoPayload.methodName=\"google.iam.admin.v1.CreateRole\" OR protoPayload.methodName=\"google.iam.admin.v1.DeleteRole\" OR protoPayload.methodName=\"google.iam.admin.v1.UpdateRole\""
   metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/custom_role_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "project_ownership_changes" {
-  display_name = "Project Ownership Assignments/Changes"
-  project      = var.project_id
-  combiner     = "OR"
+resource "google_monitoring_alert_policy" "custom_role_changes_alert" {
+  display_name = "Custom Role Changes Alert"
+  project = var.project_id
+  combiner = "OR"
   conditions {
-    display_name = "Log Metric Condition"
+    display_name = "Custom Role Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/project_ownership_changes\" AND resource.type=\"gcp_project\""
+      filter          = "metric.type=\"logging.googleapis.com/user/custom-role-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
     }
   }
-
-  notification_channels = []
+    alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
+  }
 }
 
 resource "google_logging_metric" "project_ownership_changes" {
-  name   = "project_ownership_changes"
+  name        = "project-ownership-changes"
   project = var.project_id
-  description = "Count of project ownership assignments/changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
-    }
-  }
-  filter = "resource.type=gcp_project AND protoPayload.methodName=SetIamPolicy AND protoPayload.request.policy.bindings:\"roles/owner\""
+  description = "Metric for Project Ownership Assignments/Changes"
+  filter      = "protoPayload.methodName=\"SetIamPolicy\" AND resource.type=\"project\""
   metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/project_ownership_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "sql_instance_configuration_changes" {
-  display_name = "SQL Instance Configuration Changes"
-  project      = var.project_id
-  combiner     = "OR"
+resource "google_monitoring_alert_policy" "project_ownership_changes_alert" {
+  display_name = "Project Ownership Changes Alert"
+  project = var.project_id
+  combiner = "OR"
   conditions {
-    display_name = "Log Metric Condition"
+    display_name = "Project Ownership Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/sql_instance_configuration_changes\" AND resource.type=\"cloudsql_database\""
+      filter          = "metric.type=\"logging.googleapis.com/user/project-ownership-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
     }
   }
-
-  notification_channels = []
+    alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
+  }
 }
 
 resource "google_logging_metric" "sql_instance_configuration_changes" {
-  name   = "sql_instance_configuration_changes"
+  name        = "sql-instance-config-changes"
   project = var.project_id
-  description = "Count of SQL instance configuration changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
-    }
-  }
-  filter = "resource.type=cloudsql_database AND protoPayload.methodName=cloudsql.instances.update"
+  description = "Metric for SQL Instance Configuration Changes"
+  filter      = "resource.type=\"cloudsql_database\" AND protoPayload.methodName=\"cloudsql.instances.update\""
   metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/sql_instance_configuration_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "vpc_firewall_rule_changes" {
-  display_name = "VPC Network Firewall Rule Changes"
-  project      = var.project_id
-  combiner     = "OR"
+resource "google_monitoring_alert_policy" "sql_instance_configuration_changes_alert" {
+  display_name = "SQL Instance Configuration Changes Alert"
+  project = var.project_id
+  combiner = "OR"
   conditions {
-    display_name = "Log Metric Condition"
+    display_name = "SQL Instance Configuration Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc_firewall_rule_changes\" AND resource.type=\"gcp_firewall_rule\""
+      filter          = "metric.type=\"logging.googleapis.com/user/sql-instance-config-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
     }
   }
-
-  notification_channels = []
+    alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
+  }
 }
 
 resource "google_logging_metric" "vpc_firewall_rule_changes" {
-  name   = "vpc_firewall_rule_changes"
+  name        = "vpc-firewall-rule-changes"
   project = var.project_id
-  description = "Count of VPC network firewall rule changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
-    }
-  }
-  filter = "resource.type=gcp_firewall_rule AND protoPayload.methodName=compute.firewalls.insert OR protoPayload.methodName=compute.firewalls.delete OR protoPayload.methodName=compute.firewalls.patch"
+  description = "Metric for VPC Network Firewall Rule Changes"
+  filter      = "resource.type=\"gce_firewall_rule\" AND protoPayload.methodName=\"compute.firewalls.insert\" OR protoPayload.methodName=\"compute.firewalls.delete\""
   metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/vpc_firewall_rule_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "vpc_network_changes" {
-  display_name = "VPC Network Changes"
-  project      = var.project_id
-  combiner     = "OR"
+resource "google_monitoring_alert_policy" "vpc_firewall_rule_changes_alert" {
+  display_name = "VPC Network Firewall Rule Changes Alert"
+  project = var.project_id
+  combiner = "OR"
   conditions {
-    display_name = "Log Metric Condition"
+    display_name = "VPC Network Firewall Rule Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc_network_changes\" AND resource.type=\"gcp_network\""
+      filter          = "metric.type=\"logging.googleapis.com/user/vpc-firewall-rule-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
     }
   }
-
-  notification_channels = []
+    alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
+  }
 }
 
 resource "google_logging_metric" "vpc_network_changes" {
-  name   = "vpc_network_changes"
+  name        = "vpc-network-changes"
   project = var.project_id
-  description = "Count of VPC network changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
-    }
-  }
-  filter = "resource.type=gcp_network AND protoPayload.methodName=compute.networks.insert OR protoPayload.methodName=compute.networks.delete OR protoPayload.methodName=compute.networks.patch"
+  description = "Metric for VPC Network Changes"
+  filter      = "resource.type=\"gce_network\" AND protoPayload.methodName=\"compute.networks.insert\" OR protoPayload.methodName=\"compute.networks.delete\""
   metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/vpc_network_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "vpc_network_route_changes" {
-  display_name = "VPC Network Route Changes"
-  project      = var.project_id
-  combiner     = "OR"
+resource "google_monitoring_alert_policy" "vpc_network_changes_alert" {
+  display_name = "VPC Network Changes Alert"
+  project = var.project_id
+  combiner = "OR"
   conditions {
-    display_name = "Log Metric Condition"
+    display_name = "VPC Network Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc_network_route_changes\" AND resource.type=\"gcp_route\""
+      filter          = "metric.type=\"logging.googleapis.com/user/vpc-network-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = 0
-      duration        = "60s"
-      trigger {
-        count = 1
-      }
     }
   }
-
-  notification_channels = []
+    alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
+  }
 }
 
 resource "google_logging_metric" "vpc_network_route_changes" {
-  name   = "vpc_network_route_changes"
+  name        = "vpc-network-route-changes"
   project = var.project_id
-  description = "Count of VPC network route changes"
-  bucket_options {
-    explicit_buckets {
-      bounds = [
-        1,
-        2,
-        3,
-        4,
-        5
-      ]
+  description = "Metric for VPC Network Route Changes"
+  filter      = "resource.type=\"gce_route\" AND protoPayload.methodName=\"compute.routes.insert\" OR protoPayload.methodName=\"compute.routes.delete\""
+  metric_descriptor {
+    metric_kind = "COUNTER"
+    value_type  = "INT64"
+  }
+}
+
+resource "google_monitoring_alert_policy" "vpc_network_route_changes_alert" {
+  display_name = "VPC Network Route Changes Alert"
+  project = var.project_id
+  combiner = "OR"
+  conditions {
+    display_name = "VPC Network Route Changes Condition"
+    condition_threshold {
+      filter          = "metric.type=\"logging.googleapis.com/user/vpc-network-route-changes\" resource.type=\"gcp_project\""
+      duration        = "60s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0
     }
   }
-  filter = "resource.type=gcp_route AND protoPayload.methodName=compute.routes.insert OR protoPayload.methodName=compute.routes.delete"
-  metric_descriptor {
-    launch_stage = "BETA"
-    name         = "logging.googleapis.com/user/vpc_network_route_changes"
-    type         = "INT64"
-    unit         = "1"
-    value_type   = "INT64"
-  }
-}
-
-resource "google_project_iam_binding" "service_account_token_creator" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountTokenCreator"
-  members = []
-}
-
-resource "google_project_iam_binding" "service_account_user" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountUser"
-  members = []
-}
-
-resource "google_compute_project_metadata" "oslogin_enable" {
-  project = var.project_id
-  metadata = {
-    enable-oslogin = "TRUE"
+    alert_strategy {
+    notification_channel_strategy {
+      channel_names = []
+      renotify_interval = "300s"
+    }
   }
 }
 
 resource "google_storage_bucket" "buckets" {
   for_each = toset(var.bucket_names)
-  name          = each.value
-  project       = var.project_id
-  location      = "AUSTRALIA-SOUTHEAST1"
+  name                        = each.key
+  project                     = var.project_id
+  location                    = "US"
   uniform_bucket_level_access = true
-}
-
-resource "google_project_iam_binding" "no_admin_privileges" {
-  for_each = toset(var.service_accounts)
-  project = var.project_id
-  role = "roles/viewer"
-  members = ["serviceAccount:${each.value}"]
-}
-
-resource "google_iam_service_account_key" "user_managed_keys" {
-  for_each = toset(var.service_accounts)
-  service_account_id = "projects/${var.project_id}/serviceAccounts/${each.value}"
-  disabled = true
-}
-
-resource "google_compute_network_dns_logging_policy" "dns_logging" {
-  project = var.project_id
-  network = "default"
-  logging_config {
-      enable = true
-  }
 }
