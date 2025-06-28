@@ -2,7 +2,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "5.24.0"
+      version = "~> 5.0"
     }
   }
 }
@@ -11,22 +11,41 @@ provider "google" {
   project = var.project_id
 }
 
-resource "google_project_service_identity" "cloud_asset" {
+resource "google_project_service_identity" "artifactregistry" {
   provider = google
   project  = var.project_id
-  service  = "cloudasset.googleapis.com"
+  service  = "artifactregistry.googleapis.com"
 }
 
-resource "google_project_iam_member" "cloud_asset_inventory" {
+resource "google_artifact_registry_repository" "default" {
+  depends_on = [google_project_service_identity.artifactregistry]
+
+  provider = google
+  project  = var.project_id
+  location = "us-central1"
+  repository_id = "default-repo"
+  format = "DOCKER"
+}
+
+resource "google_container_analysis_occurrence" "container_scan" {
+  depends_on = [google_artifact_registry_repository.default]
+
   project = var.project_id
-  role    = "roles/cloudasset.serviceAgent"
-  member  = "serviceAccount:${google_project_service_identity.cloud_asset.email}"
+  note_name = "projects/goog-analysis/notes/PACKAGE_VULNERABILITY"
+  resource_uri = "us-central1-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.default.name}/test-image:latest"
 }
 
-resource "google_project_service" "artifactregistry" {
+resource "google_project_service" "container_analysis" {
   provider = google
   project            = var.project_id
-  service            = "artifactregistry.googleapis.com"
+  service            = "containeranalysis.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "cloudasset" {
+  provider = google
+  project            = var.project_id
+  service            = "cloudasset.googleapis.com"
   disable_on_destroy = false
 }
 
@@ -37,48 +56,14 @@ resource "google_project_service" "gcr" {
   disable_on_destroy = false
 }
 
-resource "google_container_analysis_occurrence" "default" {
-  provider = google
-  project = var.project_id
-  note_name = "projects/goog-analysis/notes/PACKAGE_VULNERABILITY"
-  resource_uri = "https://gcr.io/google-containers/alpine"
-}
-
-resource "google_project_service" "cloudasset" {
-  provider = google
-  project            = var.project_id
-  service            = "cloudasset.googleapis.com"
-  disable_on_destroy = false
-}
-
-resource "google_project_service" "dns" {
-  provider = google
-  project            = var.project_id
-  service            = "dns.googleapis.com"
-  disable_on_destroy = false
-}
-
-resource "google_project_service" "compute" {
-  provider = google
-  project            = var.project_id
-  service            = "compute.googleapis.com"
-  disable_on_destroy = false
-}
-
 resource "google_compute_default_network" "default" {
   project = var.project_id
-  name    = var.default_network_name
-  deletion_protection = false
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  action  = "delete"
 }
 
 resource "google_compute_firewall" "rdp" {
-  provider = google
-  name    = var.default_allow_rdp_firewall_rule_name
   project = var.project_id
+  name    = var.default_allow_rdp_firewall_rule_name
   network = var.default_network_name
 
   allow {
@@ -86,20 +71,12 @@ resource "google_compute_firewall" "rdp" {
     ports    = ["3389"]
   }
 
-  direction     = "INGRESS"
-  disabled      = false
-  log_config {
-    metadata = "DISABLE"
-  }
-  priority = 1000
-  source_ranges = ["0.0.0.0/0"]
-  target_tags = []
+  source_ranges = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 }
 
 resource "google_compute_firewall" "ssh" {
-  provider = google
-  name    = var.default_allow_ssh_firewall_rule_name
   project = var.project_id
+  name    = var.default_allow_ssh_firewall_rule_name
   network = var.default_network_name
 
   allow {
@@ -107,48 +84,29 @@ resource "google_compute_firewall" "ssh" {
     ports    = ["22"]
   }
 
-  direction     = "INGRESS"
-  disabled      = false
-  log_config {
-    metadata = "DISABLE"
-  }
-  priority = 1000
-  source_ranges = ["0.0.0.0/0"]
-  target_tags = []
+  source_ranges = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 }
 
-resource "google_project_metadata" "project_metadata" {
-  provider = google
-  project = var.project_id
-
-  metadata = {
-    enable-oslogin = "TRUE"
-  }
-}
-
-resource "google_compute_network" "default_network_dns_logging" {
-  provider = google
+resource "google_compute_network" "default" {
   name                    = var.default_network_name
   project                 = var.project_id
-  delete_default_routes_on_destroy = false
-  auto_create_subnetworks = true
-  mtu                     = 1500
-
-  routing_mode = "GLOBAL"
-  dns_config {
-    enable_logging = true
-  }
+  delete_default_routes = true
 }
 
-resource "google_compute_subnetwork" "default_subnet_flow_logs" {
-  provider = google
+resource "google_compute_network" "main" {
+  name = "vpc-network"
+  auto_create_subnetworks = false
+}
+
+resource "google_compute_subnetwork" "subnet" {
   for_each = toset(var.regions)
-  name                     = "default"
-  ip_cidr_range            = "10.128.0.0/20"
-  network                  = var.default_network_name
+
+  name                     = "subnet-${each.value}"
+  ip_cidr_range            = "10.10.${index(var.regions, each.value)}.0/24"
+  region                   = each.value
+  network                  = google_compute_network.main.id
+  private_ip_google_access = true
   project                  = var.project_id
-  region                   = each.key
-  private_ip_google_access = false
   log_config {
     aggregation_interval = "INTERVAL_5_SEC"
     flow_sampling        = 0.5
@@ -156,34 +114,37 @@ resource "google_compute_subnetwork" "default_subnet_flow_logs" {
   }
 }
 
+resource "google_project_default_service_accounts" "default_accounts" {
+  project = var.project_id
+  action  = "DISABLE"
+}
+
+resource "google_compute_project_metadata" "metadata" {
+  project = var.project_id
+  metadata = {
+    enable-oslogin = "true"
+  }
+}
+
+resource "google_logging_project_sink" "log_sink" {
+  name = "all-logs"
+  destination = "bigquery.googleapis.com/projects/${var.project_id}/datasets/logging_dataset"
+  filter = "NOT logName:\"projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Fdata_access\""
+}
+
+resource "google_bigquery_dataset" "dataset" {
+  dataset_id = "logging_dataset"
+  friendly_name = "BigQuery Dataset for Logs"
+  description = "This is a test dataset for storing logs"
+  location = "US"
+}
+
 resource "google_storage_bucket" "buckets" {
-  provider = google
-  name          = "${var.project_id}.appspot.com"
+  for_each = toset(var.bucket_names)
+
+  name          = each.value
   project       = var.project_id
   location      = "AUSTRALIA-SOUTHEAST1"
+  force_destroy = true
   uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket" "buckets2" {
-  provider = google
-  name          = "${var.project_id}_bucket"
-  project       = var.project_id
-  location      = "US"
-  uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket" "buckets3" {
-  provider = google
-  name          = "staging.${var.project_id}.appspot.com"
-  project       = var.project_id
-  location      = "AUSTRALIA-SOUTHEAST1"
-  uniform_bucket_level_access = true
-}
-
-resource "google_logging_project_sink" "default" {
-  provider = google
-  name        = "all-logs"
-  project     = var.project_id
-  destination = "storage.googleapis.com/${var.project_id}-all-logs"
-  filter      = "NOT logName: projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Factivity"
 }
