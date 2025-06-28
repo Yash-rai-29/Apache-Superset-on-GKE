@@ -47,11 +47,44 @@ variable "regions" {
     "me-central1",
     "europe-west3"
   ]
-  description = "List of regions to enable flow logs."
+  description = "List of regions."
 }
 
-variable "key_rotation_period" {
+variable "default_network_name" {
   type        = string
-  description = "The key rotation period"
-  default     = "7776000s"
+  default     = "default"
+  description = "The name of the default network."
+}
+
+variable "default_allow_ssh_firewall_rule_name" {
+  type        = string
+  default     = "default-allow-ssh"
+  description = "The name of the default allow ssh firewall rule"
+}
+
+variable "default_allow_rdp_firewall_rule_name" {
+  type        = string
+  default     = "default-allow-rdp"
+  description = "The name of the default allow rdp firewall rule"
+}
+
+variable "bucket_names" {
+  type = list(string)
+  default = [
+    "aviato-game-fight-rvxirf.appspot.com",
+    "aviato-game-fight-rvxirf_bucket",
+    "staging.aviato-game-fight-rvxirf.appspot.com"
+  ]
+  description = "List of Cloud Storage bucket names."
+}
+
+variable "service_accounts" {
+  type = list(string)
+  default = [
+    "twitch-login@aviato-game-fight-rvxirf.iam.gserviceaccount.com",
+    "aviato-game-fight-rvxirf@appspot.gserviceaccount.com",
+    "30647320905-compute@developer.gserviceaccount.com",
+    "firebase-adminsdk-d21rv@aviato-game-fight-rvxirf.iam.gserviceaccount.com"
+  ]
+  description = "List of service account emails."
 }
