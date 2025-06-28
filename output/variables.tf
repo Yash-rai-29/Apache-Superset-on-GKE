@@ -1,11 +1,17 @@
 variable "project_id" {
   type        = string
-  description = "The GCP project ID."
+  description = "The ID of the project"
   default     = "aviato-game-fight-rvxirf"
 }
 
-variable "regions" {
-  type    = list(string)
+variable "region" {
+  type        = string
+  description = "The region to deploy resources to"
+  default     = "us-central1"
+}
+
+variable "default_subnets" {
+  type = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -47,32 +53,13 @@ variable "regions" {
     "me-central1",
     "europe-west3"
   ]
-  description = "List of regions."
-}
-
-variable "api_keys" {
-  type    = list(string)
-  default = []
-  description = "List of API keys."
 }
 
 variable "bucket_names" {
-  type    = list(string)
+  type = list(string)
   default = [
     "aviato-game-fight-rvxirf.appspot.com",
     "aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com"
+    "staging.aviato-game-fight-rvxirf.appspot.com",
   ]
-  description = "List of bucket names."
-}
-
-variable "service_accounts" {
-  type = list(string)
-  default = [
-    "twitch-login@aviato-game-fight-rvxirf.iam.gserviceaccount.com",
-    "aviato-game-fight-rvxirf@appspot.gserviceaccount.com",
-    "30647320905-compute@developer.gserviceaccount.com",
-    "firebase-adminsdk-d21rv@aviato-game-fight-rvxirf.iam.gserviceaccount.com"
-  ]
-  description = "List of service accounts"
 }
