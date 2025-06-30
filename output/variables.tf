@@ -1,16 +1,16 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project to manage resources in."
+  description = "The ID of the project"
   default     = "aviato-game-fight-rvxirf"
 }
 
 variable "region" {
   type        = string
-  description = "The region to deploy resources to."
+  description = "The region to deploy resources in"
   default     = "us-central1"
 }
 
-variable "default_regions" {
+variable "default_subnets" {
   type = list(string)
   default = [
     "africa-south1",
@@ -58,23 +58,11 @@ variable "default_regions" {
   ]
 }
 
-variable "api_keys_rotation_days" {
-  type        = number
-  description = "The number of days after which API keys should be rotated."
-  default     = 90
-}
-
 variable "bucket_names" {
   type = list(string)
   default = [
     "aviato-game-fight-rvxirf.appspot.com",
     "aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com"
+    "staging.aviato-game-fight-rvxirf.appspot.com",
   ]
-}
-
-variable "rdp_ssh_allowed_cidrs" {
-  type        = list(string)
-  description = "List of CIDR blocks allowed for RDP and SSH access."
-  default     = ["10.0.0.0/8"]
 }
