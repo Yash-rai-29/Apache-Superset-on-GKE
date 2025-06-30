@@ -6,7 +6,7 @@ variable "project_id" {
 
 variable "region" {
   type        = string
-  description = "The region to deploy resources in"
+  description = "The region to deploy resources to"
   default     = "us-central1"
 }
 
@@ -51,10 +51,7 @@ variable "default_subnets" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3",
-    "us-east1",
-    "europe-central2",
-    "me-west1",
+    "europe-west3"
   ]
 }
 
@@ -62,7 +59,17 @@ variable "bucket_names" {
   type = list(string)
   default = [
     "aviato-game-fight-rvxirf.appspot.com",
-    "aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com",
+    "aviato-game-fight-rvxirf-us-aviato-game-fight-rvxirf_bucket",
+    "staging.aviato-game-fight-rvxirf.appspot.com"
+  ]
+}
+
+variable "service_accounts" {
+  type = list(string)
+  default = [
+    "twitch-login@aviato-game-fight-rvxirf.iam.gserviceaccount.com",
+    "aviato-game-fight-rvxirf@appspot.gserviceaccount.com",
+    "30647320905-compute@developer.gserviceaccount.com",
+    "firebase-adminsdk-d21rv@aviato-game-fight-rvxirf.iam.gserviceaccount.com"
   ]
 }
