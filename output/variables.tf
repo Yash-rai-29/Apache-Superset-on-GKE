@@ -1,9 +1,16 @@
 variable "project_id" {
-  type = string
-  default = "aviato-game-fight-rvxirf"
+  type        = string
+  description = "The ID of the project"
+  default     = "aviato-game-fight-rvxirf"
 }
 
-variable "regions" {
+variable "region" {
+  type        = string
+  description = "The region to deploy resources to"
+  default     = "us-central1"
+}
+
+variable "default_subnets" {
   type = list(string)
   default = [
     "africa-south1",
@@ -44,10 +51,7 @@ variable "regions" {
     "europe-west12",
     "europe-west8",
     "me-central1",
-    "europe-west3",
-    "us-east1",
-    "europe-central2",
-    "me-west1"
+    "europe-west3"
   ]
 }
 
