@@ -1,61 +1,67 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project"
+  description = "The ID of the project to manage resources in."
   default     = "aviato-game-fight-rvxirf"
 }
 
 variable "region" {
   type        = string
-  description = "The region to deploy resources to"
+  description = "The region to deploy resources to."
   default     = "us-central1"
 }
 
-variable "default_subnets" {
+variable "default_regions" {
   type = list(string)
   default = [
     "africa-south1",
-    "asia-east1",
+    "southamerica-west1",
+    "us-west4",
+    "me-central2",
     "asia-east2",
     "asia-northeast1",
-    "asia-northeast2",
-    "asia-northeast3",
-    "asia-south1",
     "asia-south2",
-    "asia-southeast1",
-    "asia-southeast2",
-    "australia-southeast1",
-    "australia-southeast2",
-    "europe-central2",
-    "europe-north1",
-    "europe-north2",
-    "europe-southwest1",
-    "europe-west1",
-    "europe-west2",
-    "europe-west3",
-    "europe-west4",
-    "europe-west6",
-    "europe-west8",
-    "europe-west9",
-    "europe-west10",
-    "europe-west12",
-    "me-central1",
-    "me-central2",
-    "me-west1",
-    "northamerica-northeast1",
-    "northamerica-northeast2",
-    "northamerica-south1",
-    "southamerica-east1",
-    "southamerica-west1",
-    "us-central1",
-    "us-east1",
-    "us-east4",
-    "us-east5",
+    "asia-northeast3",
     "us-south1",
-    "us-west1",
-    "us-west2",
+    "australia-southeast1",
+    "us-east4",
     "us-west3",
-    "us-west4"
+    "asia-southeast1",
+    "europe-southwest1",
+    "asia-east1",
+    "europe-north2",
+    "australia-southeast2",
+    "northamerica-northeast2",
+    "asia-southeast2",
+    "northamerica-northeast1",
+    "asia-south1",
+    "europe-west6",
+    "europe-west1",
+    "southamerica-east1",
+    "asia-northeast2",
+    "europe-north1",
+    "us-east5",
+    "us-west2",
+    "us-west1",
+    "europe-west10",
+    "us-central1",
+    "northamerica-south1",
+    "europe-west4",
+    "europe-west9",
+    "europe-west2",
+    "europe-west12",
+    "europe-west8",
+    "me-central1",
+    "europe-west3",
+    "us-east1",
+    "europe-central2",
+    "me-west1",
   ]
+}
+
+variable "api_keys_rotation_days" {
+  type        = number
+  description = "The number of days after which API keys should be rotated."
+  default     = 90
 }
 
 variable "bucket_names" {
@@ -65,4 +71,10 @@ variable "bucket_names" {
     "aviato-game-fight-rvxirf_bucket",
     "staging.aviato-game-fight-rvxirf.appspot.com"
   ]
+}
+
+variable "rdp_ssh_allowed_cidrs" {
+  type        = list(string)
+  description = "List of CIDR blocks allowed for RDP and SSH access."
+  default     = ["10.0.0.0/8"]
 }
