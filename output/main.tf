@@ -2,408 +2,449 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "5.24.0"
+      version = "4.68.0"
     }
   }
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.location
+  project = "aviato-game-fight-rvxirf"
 }
 
-resource "google_project_service" "containeranalysis" {
-  project = var.project_id
-  service = "containeranalysis.googleapis.com"
-  disable_on_destroy = false
-}
-
-resource "google_storage_bucket" "default_bucket_ubla" {
-  name          = "${var.project_id}.appspot.com"
-  location      = "AUSTRALIA-SOUTHEAST1"
-  project       = var.project_id
-  uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket" "bucket_us_ubla" {
-  name          = "${var.project_id}_bucket"
-  location      = "US"
-  project       = var.project_id
-  uniform_bucket_level_access = true
-}
-
-resource "google_storage_bucket" "staging_bucket_ubla" {
-  name          = "staging.${var.project_id}.appspot.com"
-  location      = "AUSTRALIA-SOUTHEAST1"
-  project       = var.project_id
-  uniform_bucket_level_access = true
-}
-
-resource "google_compute_firewall" "default_allow_ssh" {
-  name    = "default-allow-ssh"
-  project = var.project_id
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = var.trusted_ip_ranges
-}
-
-resource "google_compute_firewall" "default_allow_rdp" {
-  name    = "default-allow-rdp"
-  project = var.project_id
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["3389"]
-  }
-
-  source_ranges = var.trusted_ip_ranges
-}
-
-resource "google_compute_network" "default" {
-  name                    = "default"
-  project                 = var.project_id
-  delete_default_routes = true
-  enable_ula_internal_ipv6 = false
-  auto_create_subnetworks = false
-  description             = "Default network"
-  routing_mode            = "GLOBAL"
-  dns_config {
-    enable_logging = true
-  }
-}
-
-resource "google_project_metadata" "project_metadata" {
-  project = var.project_id
-
+resource "google_project_metadata" "oslogin" {
   metadata = {
     enable-oslogin = "TRUE"
   }
 }
 
-resource "google_compute_subnet" "default_subnet" {
-  for_each = toset(var.default_regions)
+resource "google_compute_subnetwork" "default_subnet_asia_east2" {
+  name                     = "default"
+  ip_cidr_range            = "10.132.0.0/20"
+  region                   = "asia-east2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_asia_southeast2" {
+  name                     = "default"
+  ip_cidr_range            = "10.138.0.0/20"
+  region                   = "asia-southeast2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_us_east5" {
+  name                     = "default"
+  ip_cidr_range            = "10.168.0.0/20"
+  region                   = "us-east5"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_europe_west8" {
+  name                     = "default"
+  ip_cidr_range            = "10.164.0.0/20"
+  region                   = "europe-west8"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_europe_west3" {
+  name                     = "default"
+  ip_cidr_range            = "10.136.0.0/20"
+  region                   = "europe-west3"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_europe_west9" {
+  name                     = "default"
+  ip_cidr_range            = "10.170.0.0/20"
+  region                   = "europe-west9"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_me_central1" {
+  name                     = "default"
+  ip_cidr_range            = "10.172.0.0/20"
+  region                   = "me-central1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_asia_south2" {
+  name                     = "default"
+  ip_cidr_range            = "10.174.0.0/20"
+  region                   = "asia-south2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_asia_northeast3" {
+  name                     = "default"
+  ip_cidr_range            = "10.156.0.0/20"
+  region                   = "asia-northeast3"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_australia_southeast1" {
+  name                     = "default"
+  ip_cidr_range            = "10.140.0.0/20"
+  region                   = "australia-southeast1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_asia_south1" {
+  name                     = "default"
+  ip_cidr_range            = "10.150.0.0/20"
+  region                   = "asia-south1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_northamerica_south1" {
+  name                     = "default"
+  ip_cidr_range            = "10.176.0.0/20"
+  region                   = "northamerica-south1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_me_west1" {
+  name                     = "default"
+  ip_cidr_range            = "10.178.0.0/20"
+  region                   = "me-west1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_asia_northeast2" {
+  name                     = "default"
+  ip_cidr_range            = "10.154.0.0/20"
+  region                   = "asia-northeast2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_europe_west2" {
+  name                     = "default"
+  ip_cidr_range            = "10.130.0.0/20"
+  region                   = "europe-west2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_asia_northeast1" {
   name                     = "default"
   ip_cidr_range            = "10.128.0.0/20"
+  region                   = "asia-northeast1"
   network                  = "default"
-  project                  = var.project_id
-  region                   = each.value
   private_ip_google_access = true
-  log_config {
-    aggregation_interval = "INTERVAL_5_SEC"
-    flow_sampling        = 0.5
-    metadata             = "INCLUDE_ALL_METADATA"
-  }
+  flow_logs                = true
 }
 
-resource "google_logging_project_sink" "sink" {
-  name = "aviato-game-fight-rvxirf"
-  project                 = var.project_id
-  description = "exports all the log entries"
-  destination = "storage.googleapis.com/${var.project_id}-logs-bucket" # Replace with your bucket
-  filter      = "NOT logName:('projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Factivity' OR 'projects/${var.project_id}/logs/system.slice')"
+resource "google_compute_subnetwork" "default_subnet_me_central2" {
+  name                     = "default"
+  ip_cidr_range            = "10.180.0.0/20"
+  region                   = "me-central2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_storage_bucket" "log_bucket" {
-  name          = "${var.project_id}-logs-bucket"
-  location      = var.location
-  project       = var.project_id
-  force_destroy = true
+resource "google_compute_subnetwork" "default_subnet_northamerica_northeast2" {
+  name                     = "default"
+  ip_cidr_range            = "10.166.0.0/20"
+  region                   = "northamerica-northeast2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "audit_config_changes" {
-  name        = "audit-config-changes"
-  project     = var.project_id
-  description = "Metric for audit configuration changes"
-  filter      = "resource.type=audited_resource AND severity>=WARNING"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_southamerica_west1" {
+  name                     = "default"
+  ip_cidr_range            = "10.182.0.0/20"
+  region                   = "southamerica-west1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "audit_config_changes_alert" {
-  display_name = "Audit Configuration Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/audit-config-changes\" AND resource.type=\"gcp_project\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_europe_west6" {
+  name                     = "default"
+  ip_cidr_range            = "10.158.0.0/20"
+  region                   = "europe-west6"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "bucket_permission_changes" {
-  name        = "bucket-permission-changes"
-  project     = var.project_id
-  description = "Metric for cloud storage bucket IAM permission changes"
-  filter      = "resource.type=\"gcs_bucket\" AND protoPayload.methodName:SetIamPolicy"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_australia_southeast2" {
+  name                     = "default"
+  ip_cidr_range            = "10.184.0.0/20"
+  region                   = "australia-southeast2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "bucket_permission_changes_alert" {
-  display_name = "Cloud Storage Bucket IAM Permission Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/bucket-permission-changes\" AND resource.type=\"gcs_bucket\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_europe_west12" {
+  name                     = "default"
+  ip_cidr_range            = "10.186.0.0/20"
+  region                   = "europe-west12"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "custom_role_changes" {
-  name        = "custom-role-changes"
-  project     = var.project_id
-  description = "Metric for custom role changes"
-  filter      = "resource.type=iam_role OR resource.type=gcp_iam_role"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_us_south1" {
+  name                     = "default"
+  ip_cidr_range            = "10.152.0.0/20"
+  region                   = "us-south1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "custom_role_changes_alert" {
-  display_name = "Custom Role Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/custom-role-changes\" AND resource.type=\"gcp_project\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_europe_central2" {
+  name                     = "default"
+  ip_cidr_range            = "10.144.0.0/20"
+  region                   = "europe-central2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "project_ownership_changes" {
-  name        = "project-ownership-changes"
-  project     = var.project_id
-  description = "Metric for project ownership assignments/changes"
-  filter      = "resource.type=gcp_project AND protoPayload.methodName=google.cloudresourcemanager.projects.setIamPolicy"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_europe_west4" {
+  name                     = "default"
+  ip_cidr_range            = "10.146.0.0/20"
+  region                   = "europe-west4"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "project_ownership_changes_alert" {
-  display_name = "Project Ownership Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/project-ownership-changes\" AND resource.type=\"gcp_project\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_europe_west10" {
+  name                     = "default"
+  ip_cidr_range            = "10.188.0.0/20"
+  region                   = "europe-west10"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "sql_instance_config_changes" {
-  name        = "sql-instance-config-changes"
-  project     = var.project_id
-  description = "Metric for SQL instance configuration changes"
-  filter      = "resource.type=cloudsql_instance AND protoPayload.methodName=cloudsql.instances.update AND severity=NOTICE"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_asia_southeast1" {
+  name                     = "default"
+  ip_cidr_range            = "10.148.0.0/20"
+  region                   = "asia-southeast1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "sql_instance_config_changes_alert" {
-  display_name = "SQL Instance Configuration Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/sql-instance-config-changes\" AND resource.type=\"cloudsql_instance\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_asia_east1" {
+  name                     = "default"
+  ip_cidr_range            = "10.124.0.0/20"
+  region                   = "asia-east1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "vpc_firewall_rule_changes" {
-  name        = "vpc-firewall-rule-changes"
-  project     = var.project_id
-  description = "Metric for VPC network firewall rule changes"
-  filter      = "resource.type=gcp_firewall_rule AND (protoPayload.methodName=compute.firewalls.insert OR protoPayload.methodName=compute.firewalls.patch OR protoPayload.methodName=compute.firewalls.delete)"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_us_west1" {
+  name                     = "default"
+  ip_cidr_range            = "10.120.0.0/20"
+  region                   = "us-west1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "vpc_firewall_rule_changes_alert" {
-  display_name = "VPC Network Firewall Rule Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc-firewall-rule-changes\" AND resource.type=\"gcp_firewall_rule\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_europe_west1" {
+  name                     = "default"
+  ip_cidr_range            = "10.122.0.0/20"
+  region                   = "europe-west1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "vpc_network_changes" {
-  name        = "vpc-network-changes"
-  project     = var.project_id
-  description = "Metric for VPC network changes"
-  filter      = "resource.type=gcp_network AND (protoPayload.methodName=compute.networks.insert OR protoPayload.methodName=compute.networks.patch OR protoPayload.methodName=compute.networks.delete)"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_northamerica_northeast1" {
+  name                     = "default"
+  ip_cidr_range            = "10.162.0.0/20"
+  region                   = "northamerica-northeast1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "vpc_network_changes_alert" {
-  display_name = "VPC Network Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc-network-changes\" AND resource.type=\"gcp_network\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_europe_north1" {
+  name                     = "default"
+  ip_cidr_range            = "10.142.0.0/20"
+  region                   = "europe-north1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_logging_metric" "vpc_network_route_changes" {
-  name        = "vpc-network-route-changes"
-  project     = var.project_id
-  description = "Metric for VPC network route changes"
-  filter      = "resource.type=gcp_route AND (protoPayload.methodName=compute.routes.insert OR protoPayload.methodName=compute.routes.patch OR protoPayload.methodName=compute.routes.delete)"
-  metric_descriptor {
-    metric_kind = "COUNTER"
-    value_type  = "INT64"
-  }
+resource "google_compute_subnetwork" "default_subnet_southamerica_east1" {
+  name                     = "default"
+  ip_cidr_range            = "10.148.0.0/20"
+  region                   = "southamerica-east1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_monitoring_alert_policy" "vpc_network_route_changes_alert" {
-  display_name = "VPC Network Route Changes Alert"
-  project      = var.project_id
-  combiner     = "OR"
-
-  conditions {
-    display_name = "Log Metric Condition"
-    condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc-network-route-changes\" AND resource.type=\"gcp_route\""
-      comparison      = "COMPARISON_GT"
-      threshold_value = 0
-      duration        = "60s"
-    }
-  }
-  notification_channels = []
+resource "google_compute_subnetwork" "default_subnet_us_west4" {
+  name                     = "default"
+  ip_cidr_range            = "10.190.0.0/20"
+  region                   = "us-west4"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_project_iam_binding" "twitch_login_iam_binding" {
-  project = var.project_id
-  role    = "roles/viewer" # Replace with less permissive role
-
-  members = [
-    "serviceAccount:twitch-login@${var.project_id}.iam.gserviceaccount.com",
-  ]
+resource "google_compute_subnetwork" "default_subnet_us_west3" {
+  name                     = "default"
+  ip_cidr_range            = "10.192.0.0/20"
+  region                   = "us-west3"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_project_iam_binding" "appspot_sa_iam_binding" {
-  project = var.project_id
-  role    = "roles/viewer" # Replace with less permissive role
-
-  members = [
-    "serviceAccount:${var.project_id}@appspot.gserviceaccount.com",
-  ]
+resource "google_compute_subnetwork" "default_subnet_us_east4" {
+  name                     = "default"
+  ip_cidr_range            = "10.154.0.0/20"
+  region                   = "us-east4"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_project_iam_binding" "compute_sa_iam_binding" {
-  project = var.project_id
-  role    = "roles/viewer" # Replace with less permissive role
-
-  members = [
-    "serviceAccount:30647320905-compute@developer.gserviceaccount.com",
-  ]
+resource "google_compute_subnetwork" "default_subnet_us_central1" {
+  name                     = "default"
+  ip_cidr_range            = "10.128.0.0/20"
+  region                   = "us-central1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
 }
 
-resource "google_project_service" "cloudasset" {
-  project = var.project_id
-  service = "cloudasset.googleapis.com"
+resource "google_compute_subnetwork" "default_subnet_us_west2" {
+  name                     = "default"
+  ip_cidr_range            = "10.194.0.0/20"
+  region                   = "us-west2"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_europe_southwest1" {
+  name                     = "default"
+  ip_cidr_range            = "10.196.0.0/20"
+  region                   = "europe-southwest1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_compute_subnetwork" "default_subnet_us_east1" {
+  name                     = "default"
+  ip_cidr_range            = "10.124.0.0/20"
+  region                   = "us-east1"
+  network                  = "default"
+  private_ip_google_access = true
+  flow_logs                = true
+}
+
+resource "google_project_service" "containeranalysis" {
+  service            = "containeranalysis.googleapis.com"
   disable_on_destroy = false
 }
 
-data "google_iam_policy" "service_account_no_admin" {
-  binding {
-    role = "roles/viewer"
+resource "google_project_service" "cloudasset" {
+  service            = "cloudasset.googleapis.com"
+  disable_on_destroy = false
+}
 
-    members = [
-      "serviceAccount:firebase-adminsdk-d21rv@${var.project_id}.iam.gserviceaccount.com",
-    ]
+resource "google_storage_bucket" "bucket_aviato_game_fight_rvxirf_appspot" {
+  name                        = "aviato-game-fight-rvxirf.appspot.com"
+  location                    = "AUSTRALIA-SOUTHEAST1"
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "bucket_aviato_game_fight_rvxirf_bucket" {
+  name                        = "aviato-game-fight-rvxirf_bucket"
+  location                    = "US"
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket" "bucket_staging_aviato_game_fight_rvxirf_appspot" {
+  name                        = "staging.aviato-game-fight-rvxirf.appspot.com"
+  location                    = "AUSTRALIA-SOUTHEAST1"
+  uniform_bucket_level_access = true
+}
+
+resource "google_compute_firewall" "default_allow_rdp" {
+  name    = "default-allow-rdp"
+  network = "default"
+  allow {
+    protocol = "tcp"
+    ports    = ["3389"]
   }
+  source_ranges = ["10.0.0.0/8", "192.168.0.0/16"]
 }
 
-resource "google_project_iam_policy" "service_account_policy" {
+resource "google_compute_firewall" "default_allow_ssh" {
+  name    = "default-allow-ssh"
+  network = "default"
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+   source_ranges = ["10.0.0.0/8", "192.168.0.0/16"]
+}
+
+resource "google_compute_network" "default_network" {
+  name                    = "default"
+  auto_create_subnetworks = "false"
+  delete_default_routes_on_destroy = true
+}
+
+resource "google_compute_network_dns_policy" "default_network_dns_policy" {
+  name = "default-dns-policy"
+  network = "default"
+  enable_logging = true
+}
+
+resource "google_logging_project_sink" "project_sink" {
+  name = "all-logs"
+  destination = "storage.googleapis.com/${google_storage_bucket.bucket_aviato_game_fight_rvxirf_appspot.name}"
+  filter = "NOT logName:('projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Fdata_access') AND NOT logName:('projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Fsystem_event') AND NOT logName:('projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Faudit')"
   project = var.project_id
-  policy_data = data.google_iam_policy.service_account_no_admin.policy_data
 }
 
-resource "google_service_account_key" "rotate_twitch_login_key" {
-  service_account_id = "twitch-login@${var.project_id}.iam.gserviceaccount.com"
-  key_algorithm      = "KEY_ALG_RSA_2048"  
-}
-
-resource "google_service_account_key" "rotate_compute_sa_key" {
-  service_account_id = "30647320905-compute@developer.gserviceaccount.com"
-  key_algorithm      = "KEY_ALG_RSA_2048"
-}
-
-resource "google_service_account" "aviato_game_fight_rvxirf" {
-  account_id   = "aviato-game-fight-rvxirf"
-  disabled     = true
-}
-
-resource "google_service_account" "firebase_adminsdk_d21rv" {
-  account_id   = "firebase-adminsdk-d21rv"
-  disabled     = true
+variable "project_id" {
+  type = string
+  default = "aviato-game-fight-rvxirf"
 }
