@@ -1,6 +1,7 @@
 variable "project_id" {
-  type = string
-  default = "aviato-game-fight-rvxirf"
+  type        = string
+  description = "The ID of the project"
+  default     = "aviato-game-fight-rvxirf"
 }
 
 variable "regions" {
@@ -49,6 +50,7 @@ variable "regions" {
     "europe-central2",
     "me-west1",
   ]
+  description = "List of regions"
 }
 
 variable "bucket_names" {
@@ -58,4 +60,5 @@ variable "bucket_names" {
     "aviato-game-fight-rvxirf_bucket",
     "staging.aviato-game-fight-rvxirf.appspot.com"
   ]
+  description = "List of bucket names"
 }
