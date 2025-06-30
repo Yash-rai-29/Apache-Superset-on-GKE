@@ -4,14 +4,8 @@ variable "project_id" {
   default     = "aviato-game-fight-rvxirf"
 }
 
-variable "location" {
-  type        = string
-  description = "The location for resources"
-  default     = "US"
-}
-
-variable "default_network_regions" {
-  type    = list(string)
+variable "default_regions" {
+  type = list(string)
   default = [
     "asia-east2",
     "asia-southeast2",
@@ -44,8 +38,9 @@ variable "default_network_regions" {
     "us-west1",
     "europe-west1",
     "northamerica-northeast1",
-    "europe-north1",
+    "europe-north2",
     "africa-south1",
+    "europe-north1",
     "southamerica-east1",
     "us-west4",
     "us-west3",
@@ -53,41 +48,25 @@ variable "default_network_regions" {
     "us-central1",
     "us-west2",
     "europe-southwest1",
-    "us-east1"
+    "us-east1",
   ]
-  description = "Regions where default subnet flow logs should be enabled"
+  description = "List of regions where default subnets exist"
 }
 
-variable "gcs_buckets_uniform_access" {
+variable "rdp_ssh_allowed_networks" {
+  type = list(string)
+  default = [
+    "10.0.0.0/8",
+  ]
+  description = "List of networks allowed to access RDP and SSH ports"
+}
+
+variable "bucket_names" {
   type = list(string)
   default = [
     "aviato-game-fight-rvxirf.appspot.com",
     "aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com",
+    "staging.aviato-game-fight-rvxirf.appspot.com"
   ]
-  description = "List of GCS bucket names for uniform bucket level access"
-}
-
-variable "default_vpc_name" {
-  type        = string
-  description = "Name of the default VPC network"
-  default     = "default"
-}
-
-variable "default_ssh_allowed_sources" {
-  type        = list(string)
-  description = "The allowed source ranges for SSH access.  Modify this to restrict SSH access to specific networks."
-  default     = []
-}
-
-variable "default_rdp_allowed_sources" {
-  type        = list(string)
-  description = "The allowed source ranges for RDP access.  Modify this to restrict RDP access to specific networks."
-  default     = []
-}
-
-variable "logging_bucket" {
-  type        = string
-  description = "The name of the GCS bucket to store logs"
-  default     = "aviato-game-fight-rvxirf-logs"
+  description = "List of bucket names for which uniform bucket-level access needs to be enabled."
 }
