@@ -1,6 +1,6 @@
 variable "project_id" {
   type        = string
-  description = "The ID of the project"
+  description = "The ID of the Google Cloud project"
   default     = "aviato-game-fight-rvxirf"
 }
 
@@ -50,19 +50,7 @@ variable "regions" {
     "europe-central2",
     "me-west1"
   ]
-  description = "List of regions"
-}
-
-variable "key_prefix" {
-  type        = string
-  description = "Prefix for generated API keys"
-  default     = "generated-api-key"
-}
-
-variable "key_rotation_interval" {
-  type        = string
-  description = "The key rotation interval in days"
-  default     = "70d"
+  description = "List of regions where subnets exist"
 }
 
 variable "bucket_names" {
@@ -72,11 +60,5 @@ variable "bucket_names" {
     "aviato-game-fight-rvxirf_bucket",
     "staging.aviato-game-fight-rvxirf.appspot.com"
   ]
-  description = "List of cloud storage bucket names"
-}
-
-variable "allowed_rdp_ssh_cidr_blocks" {
-  type        = list(string)
-  default     = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-  description = "List of CIDR blocks allowed for RDP and SSH access."
+  description = "List of bucket names"
 }
