@@ -1,5 +1,11 @@
-resource "google_project_service" "container_registry" {
-  service            = "containerregistry.googleapis.com"
+resource "google_project_service" "containerregistry" {
+  service = "containerregistry.googleapis.com"
   disable_on_destroy = false
-  project            = var.project_id
+}
+
+resource "google_container_registry" "registry" {
+  location = "us"
+  project = var.project_id
+
+  depends_on = [google_project_service.containerregistry]
 }
