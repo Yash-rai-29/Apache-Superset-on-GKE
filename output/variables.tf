@@ -1,16 +1,9 @@
 variable "project_id" {
-  type        = string
-  description = "The ID of the project in which to provision resources."
-  default     = "aviato-game-fight-rvxirf"
+  type = string
+  default = "aviato-game-fight-rvxirf"
 }
 
-variable "region" {
-  type        = string
-  description = "The region in which to provision resources."
-  default     = "us-central1"
-}
-
-variable "default_subnets" {
+variable "regions" {
   type = list(string)
   default = [
     "africa-south1",
@@ -58,20 +51,11 @@ variable "default_subnets" {
   ]
 }
 
-variable "api_key_rotation_days" {
-  type        = number
-  description = "The number of days after which API keys should be rotated."
-  default     = 90
-}
-
-variable "rdp_ssh_allowed_cidrs" {
-  type        = list(string)
-  description = "List of CIDR blocks allowed for RDP and SSH access.  Restrict to your trusted networks."
-  default     = ["10.0.0.0/8"]
-}
-
-variable "log_export_bucket" {
-  type        = string
-  description = "Bucket to store the exported logs"
-  default = "aviato-game-fight-rvxirf-logs"
+variable "bucket_names" {
+  type = list(string)
+  default = [
+    "aviato-game-fight-rvxirf.appspot.com",
+    "aviato-game-fight-rvxirf_bucket",
+    "staging.aviato-game-fight-rvxirf.appspot.com"
+  ]
 }
