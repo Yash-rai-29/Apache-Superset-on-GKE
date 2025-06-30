@@ -1,56 +1,63 @@
-resource "google_logging_metric" "audit_configuration_changes" {
+resource "google_logging_metric" "audit_config_changes" {
   provider = google
-  name        = "audit-configuration-changes"
-  project     = var.project_id
-  description = "Count of audit configuration changes"
-  filter      = "logName:cloudaudit.googleapis.com"
+  name   = "audit-config-changes"
+  project = var.project_id
+  filter = "protoPayload.methodName=\"SetIamPolicy\" OR protoPayload.methodName=\"google.cloud.audit.AuditPolicies.updateAuditConfig\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "audit_configuration_changes" {
+resource "google_monitoring_alert_policy" "audit_config_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for Audit Configuration Changes"
+  display_name = "Audit Config Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for Audit Configuration Changes"
+    display_name = "Audit Config Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/audit-configuration-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/audit-config-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
+
   notification_channels = []
 }
 
 resource "google_logging_metric" "bucket_permission_changes" {
   provider = google
-  name        = "bucket-permission-changes"
-  project     = var.project_id
-  description = "Count of bucket permission changes"
-  filter      = "logName:cloudaudit.googleapis.com AND resource.type=gcs_bucket"
+  name   = "bucket-permission-changes"
+  project = var.project_id
+  filter = "resource.type=\"gcs_bucket\" AND protoPayload.methodName=\"storage.setIamPermissions\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "bucket_permission_changes" {
+resource "google_monitoring_alert_policy" "bucket_permission_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for Bucket Permission Changes"
+  display_name = "Bucket Permission Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for Bucket Permission Changes"
+    display_name = "Bucket Permission Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/bucket-permission-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/bucket-permission-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
   notification_channels = []
@@ -58,28 +65,31 @@ resource "google_monitoring_alert_policy" "bucket_permission_changes" {
 
 resource "google_logging_metric" "custom_role_changes" {
   provider = google
-  name        = "custom-role-changes"
-  project     = var.project_id
-  description = "Count of custom role changes"
-  filter      = "logName:cloudaudit.googleapis.com AND protoPayload.methodName=\"google.iam.admin.v1.CreateRole\""
+  name   = "custom-role-changes"
+  project = var.project_id
+  filter = "resource.type=\"iam_role\" AND protoPayload.methodName=\"google.iam.admin.v1.CreateRole\" OR protoPayload.methodName=\"google.iam.admin.v1.DeleteRole\" OR protoPayload.methodName=\"google.iam.admin.v1.UpdateRole\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "custom_role_changes" {
+resource "google_monitoring_alert_policy" "custom_role_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for Custom Role Changes"
+  display_name = "Custom Role Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for Custom Role Changes"
+    display_name = "Custom Role Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/custom-role-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/custom-role-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
   notification_channels = []
@@ -87,57 +97,63 @@ resource "google_monitoring_alert_policy" "custom_role_changes" {
 
 resource "google_logging_metric" "project_ownership_changes" {
   provider = google
-  name        = "project-ownership-changes"
-  project     = var.project_id
-  description = "Count of project ownership changes"
-  filter      = "logName:cloudaudit.googleapis.com AND protoPayload.methodName=\"SetIamPolicy\" AND resource.type=\"project\""
+  name   = "project-ownership-changes"
+  project = var.project_id
+  filter = "protoPayload.serviceName=\"cloudresourcemanager.googleapis.com\" AND protoPayload.methodName=\"SetIamPolicy\" AND resource.type=\"project\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "project_ownership_changes" {
+resource "google_monitoring_alert_policy" "project_ownership_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for Project Ownership Changes"
+  display_name = "Project Ownership Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for Project Ownership Changes"
+    display_name = "Project Ownership Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/project-ownership-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/project-ownership-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
   notification_channels = []
 }
 
-resource "google_logging_metric" "sql_instance_configuration_changes" {
+resource "google_logging_metric" "sql_instance_config_changes" {
   provider = google
-  name        = "sql-instance-configuration-changes"
-  project     = var.project_id
-  description = "Count of sql instance configuration changes"
-  filter      = "logName:cloudaudit.googleapis.com AND resource.type=cloudsql_database_instance"
+  name   = "sql-instance-config-changes"
+  project = var.project_id
+  filter = "resource.type=\"cloudsql_database_instance\" AND protoPayload.methodName=\"cloudsql.instances.update\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "sql_instance_configuration_changes" {
+resource "google_monitoring_alert_policy" "sql_instance_config_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for SQL Instance Configuration Changes"
+  display_name = "SQL Instance Config Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for SQL Instance Configuration Changes"
+    display_name = "SQL Instance Config Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/sql-instance-configuration-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/sql-instance-config-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
   notification_channels = []
@@ -145,28 +161,31 @@ resource "google_monitoring_alert_policy" "sql_instance_configuration_changes" {
 
 resource "google_logging_metric" "vpc_firewall_rule_changes" {
   provider = google
-  name        = "vpc-firewall-rule-changes"
-  project     = var.project_id
-  description = "Count of vpc firewall rule changes"
-  filter      = "logName:cloudaudit.googleapis.com AND resource.type=gce_firewall_rule"
+  name   = "vpc-firewall-rule-changes"
+  project = var.project_id
+  filter = "resource.type=\"gce_firewall_rule\" AND protoPayload.methodName=\"compute.firewalls.insert\" OR protoPayload.methodName=\"compute.firewalls.delete\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "vpc_firewall_rule_changes" {
+resource "google_monitoring_alert_policy" "vpc_firewall_rule_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for VPC Firewall Rule Changes"
+  display_name = "VPC Firewall Rule Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for VPC Firewall Rule Changes"
+    display_name = "VPC Firewall Rule Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc-firewall-rule-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/vpc-firewall-rule-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
   notification_channels = []
@@ -174,28 +193,31 @@ resource "google_monitoring_alert_policy" "vpc_firewall_rule_changes" {
 
 resource "google_logging_metric" "vpc_network_changes" {
   provider = google
-  name        = "vpc-network-changes"
-  project     = var.project_id
-  description = "Count of vpc network changes"
-  filter      = "logName:cloudaudit.googleapis.com AND resource.type=gce_network"
+  name   = "vpc-network-changes"
+  project = var.project_id
+  filter = "resource.type=\"gce_network\" AND protoPayload.methodName=\"compute.networks.insert\" OR protoPayload.methodName=\"compute.networks.delete\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "vpc_network_changes" {
+resource "google_monitoring_alert_policy" "vpc_network_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for VPC Network Changes"
+  display_name = "VPC Network Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for VPC Network Changes"
+    display_name = "VPC Network Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc-network-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/vpc-network-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
   notification_channels = []
@@ -203,28 +225,31 @@ resource "google_monitoring_alert_policy" "vpc_network_changes" {
 
 resource "google_logging_metric" "vpc_network_route_changes" {
   provider = google
-  name        = "vpc-network-route-changes"
-  project     = var.project_id
-  description = "Count of vpc network route changes"
-  filter      = "logName:cloudaudit.googleapis.com AND resource.type=gce_route"
+  name   = "vpc-network-route-changes"
+  project = var.project_id
+  filter = "resource.type=\"gce_route\" AND protoPayload.methodName=\"compute.routes.insert\" OR protoPayload.methodName=\"compute.routes.delete\""
   metric_descriptor {
     metric_kind = "COUNTER"
     value_type = "INT64"
   }
 }
 
-resource "google_monitoring_alert_policy" "vpc_network_route_changes" {
+resource "google_monitoring_alert_policy" "vpc_network_route_changes_alert" {
   provider = google
   project      = var.project_id
-  display_name = "Alert for VPC Network Route Changes"
+  display_name = "VPC Network Route Changes Alert"
   combiner     = "OR"
   conditions {
-    display_name = "Condition for VPC Network Route Changes"
+    display_name = "VPC Network Route Changes Condition"
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/vpc-network-route-changes\" AND resource.type=\"gcp_project\""
-      duration        = "60s"
-      comparison      = "COMPARISON_GT"
+      filter     = "metric.type=\"logging.googleapis.com/user/vpc-network-route-changes\" AND resource.type=\"gcp_project\""
+      duration   = "60s"
+      comparison = "COMPARISON_GT"
       threshold_value = 0
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_SUM"
+      }
     }
   }
   notification_channels = []
