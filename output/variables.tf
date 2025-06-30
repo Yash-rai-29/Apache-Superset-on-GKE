@@ -4,8 +4,14 @@ variable "project_id" {
   default     = "aviato-game-fight-rvxirf"
 }
 
-variable "regions" {
-  type    = list(string)
+variable "region" {
+  type        = string
+  description = "The region to deploy resources to"
+  default     = "us-central1"
+}
+
+variable "default_subnets" {
+  type = list(string)
   default = [
     "africa-south1",
     "southamerica-west1",
@@ -49,42 +55,5 @@ variable "regions" {
     "us-east1",
     "europe-central2",
     "me-west1"
-  ]
-}
-
-variable "default_network_name" {
-  type        = string
-  description = "Name of the default network"
-  default     = "default"
-}
-
-variable "default_allow_ssh_firewall_name" {
-  type        = string
-  description = "Name of the default allow ssh firewall rule"
-  default     = "default-allow-ssh"
-}
-
-variable "default_allow_rdp_firewall_name" {
-  type        = string
-  description = "Name of the default allow rdp firewall rule"
-  default     = "default-allow-rdp"
-}
-
-variable "bucket_names" {
-  type = list(string)
-  default = [
-    "aviato-game-fight-rvxirf.appspot.com",
-    "aviato-game-fight-rvxirf_bucket",
-    "staging.aviato-game-fight-rvxirf.appspot.com"
-  ]
-}
-
-variable "service_accounts" {
-  type = list(string)
-  default = [
-    "twitch-login@aviato-game-fight-rvxirf.iam.gserviceaccount.com",
-    "aviato-game-fight-rvxirf@appspot.gserviceaccount.com",
-    "30647320905-compute@developer.gserviceaccount.com",
-    "firebase-adminsdk-d21rv@aviato-game-fight-rvxirf.iam.gserviceaccount.com"
   ]
 }
